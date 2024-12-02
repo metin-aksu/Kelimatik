@@ -10,9 +10,22 @@ import {
   ActivityIndicator,
   Alert,
   Platform,
+  Image,
+  Linking,
+  Modal,
+  Button,
 } from 'react-native';
 import {Picker} from '@react-native-picker/picker';
 import {databaseConnection, Word, SearchType} from '../db/database';
+import header_icon from '../assets/icon/header_icon.png';
+import question_icon from '../assets/icon/question_icon.png';
+
+import {
+  version as appVersion,
+  name as appName,
+  author as appAuthor,
+  website as appWebsite,
+} from '../../app.json';
 
 interface Section {
   title: string;
@@ -26,6 +39,7 @@ export const HomeScreen: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [dbInitialized, setDbInitialized] = useState<boolean>(false);
   const [isError, setIsError] = useState<string>('');
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
 
   useEffect(() => {
     const initDB = async () => {
@@ -101,95 +115,177 @@ export const HomeScreen: React.FC = () => {
     setIsError('');
   };
 
+  const handleLinkPress = () => {
+    Linking.openURL(appWebsite).catch(err =>
+      console.error('Failed to open URL:', err),
+    );
+  };
+
   return (
-    <View style={styles.container}>
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.input}
-          value={searchText}
-          onChangeText={text => {
-            setSearchText(text);
-            setIsError('');
-          }}
-          autoCapitalize="none"
-          onFocus={() => setIsError('')}
-          placeholder="Harfleri girin..."
-          placeholderTextColor="#666"
-        />
-      </View>
-      <View style={styles.actionContainer}>
-        <View style={styles.pickerContainer}>
-          <Picker
-            selectedValue={searchType}
-            onValueChange={itemValue => setSearchType(itemValue as SearchType)}
-            style={styles.picker}>
-            <Picker.Item
-              label="Sadece bu harflerden oluşan kelimeleri"
-              value={SearchType.EXACT}
-            />
-            <Picker.Item
-              label="Bu harflerle başlayan kelimeleri"
-              value={SearchType.START}
-            />
-            <Picker.Item
-              label="Bu harflerle biten kelimeleri"
-              value={SearchType.END}
-            />
-            <Picker.Item
-              label="Bu harf öbeğini içeren kelimeleri"
-              value={SearchType.CONTAIN}
-            />
-          </Picker>
+    <>
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Hakkında</Text>
+            <Text style={styles.aboutText}>
+              {appName} {appVersion}
+            </Text>
+            <Text style={styles.aboutText}>{appAuthor}</Text>
+            <TouchableOpacity onPress={handleLinkPress}>
+              <Text style={[styles.aboutText, styles.linkText]}>
+                {appWebsite}
+              </Text>
+            </TouchableOpacity>
+            <Button style={styles.modalButton} title="TAMAM" onPress={() => setModalVisible(false)} />
+          </View>
         </View>
-        <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
-          onPress={handleSearch}
-          disabled={loading || !dbInitialized}>
-          <Text style={styles.buttonText}>Bul</Text>
+      </Modal>
+
+      <View style={styles.headerContainer}>
+        <View style={styles.titleContainer}>
+          <Image source={header_icon} style={styles.titleIcon} />
+          <Text style={styles.titleText}>Kelimatik</Text>
+        </View>
+        <TouchableOpacity onPress={() => setModalVisible(true)}>
+          <Image source={question_icon} style={styles.questionIcon} />
         </TouchableOpacity>
       </View>
-      {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" style={styles.loader} />
-      ) : (
-        <>
-          {isError ? (
-            <View style={styles.errorContainer}>
-              <Text style={styles.errorText}>{isError}</Text>
-            </View>
-          ) : (
-            <SectionList
-              sections={sections}
-              keyExtractor={item => item?.id?.toString()}
-              renderItem={renderWord}
-              renderSectionHeader={({section: {title}}) => (
-                <View style={styles.sectionHeader}>
-                  <Text style={styles.sectionHeaderText}>{title}</Text>
-                </View>
-              )}
-              style={styles.list}
-            />
-          )}
-          {sections.length > 0 && (
-            <TouchableOpacity
-              style={[styles.clearButton]}
-              onPress={handleClear}>
-              <Text style={styles.buttonText}>Listeyi Temizle</Text>
-            </TouchableOpacity>
-          )}
-        </>
-      )}
-    </View>
+      <View style={styles.container}>
+        <View style={styles.searchContainer}>
+          <TextInput
+            style={styles.input}
+            value={searchText}
+            onChangeText={text => {
+              setSearchText(text);
+              setIsError('');
+            }}
+            autoCapitalize="none"
+            onFocus={() => setIsError('')}
+            placeholder="Harfleri girin..."
+            placeholderTextColor="#666"
+          />
+        </View>
+        <View style={styles.actionContainer}>
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={searchType}
+              onValueChange={itemValue =>
+                setSearchType(itemValue as SearchType)
+              }
+              style={styles.picker}>
+              <Picker.Item
+                label="Sadece bu harflerden oluşanları"
+                value={SearchType.EXACT}
+              />
+              <Picker.Item
+                label="Bu harflerle başlayan kelimeleri"
+                value={SearchType.START}
+              />
+              <Picker.Item
+                label="Bu harflerle biten kelimeleri"
+                value={SearchType.END}
+              />
+              <Picker.Item
+                label="Bu harf öbeğini içeren kelimeleri"
+                value={SearchType.CONTAIN}
+              />
+            </Picker>
+          </View>
+          <TouchableOpacity
+            style={[styles.button, loading && styles.buttonDisabled]}
+            onPress={handleSearch}
+            disabled={loading || !dbInitialized}>
+            <Text style={styles.buttonText}>Bul</Text>
+          </TouchableOpacity>
+        </View>
+        {loading ? (
+          <ActivityIndicator
+            size="large"
+            color="#0000ff"
+            style={styles.loader}
+          />
+        ) : (
+          <>
+            {isError ? (
+              <View style={styles.errorContainer}>
+                <Text style={styles.errorText}>{isError}</Text>
+              </View>
+            ) : (
+              <SectionList
+                sections={sections}
+                keyExtractor={item => item?.id?.toString()}
+                renderItem={renderWord}
+                renderSectionHeader={({section: {title}}) => (
+                  <View style={styles.sectionHeader}>
+                    <Text style={styles.sectionHeaderText}>{title}</Text>
+                  </View>
+                )}
+                style={styles.list}
+              />
+            )}
+            {sections.length > 0 && (
+              <TouchableOpacity
+                style={[styles.clearButton]}
+                onPress={handleClear}>
+                <Text style={styles.buttonText}>Temizle</Text>
+              </TouchableOpacity>
+            )}
+          </>
+        )}
+      </View>
+    </>
   );
 };
 
 const styles = StyleSheet.create({
+  headerContainer: {
+    marginBottom: 5,
+    backgroundColor: '#D0D0D0',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    display: 'flex',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  titleText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#03a9f4',
+  },
+  titleIcon: {
+    width: 24,
+    height: 24,
+    marginRight: 8,
+  },
+  questionIcon: {
+    width: 24,
+    height: 24,
+  },
   container: {
     flex: 1,
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
     backgroundColor: '#fff',
   },
   searchContainer: {
     marginBottom: 12,
+  },
+  header: {
+    height: 48,
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 8,
+    paddingHorizontal: 16,
+    fontSize: 16,
   },
   input: {
     height: 48,
@@ -200,7 +296,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   picker: {
-    height: Platform.OS === 'ios' ? 150 : 48,
+    // height: Platform.OS === 'ios' ? 150 : 48,
+    color: '#000',
+    fontSize: 14,
+    paddingTop: Platform.OS === 'ios' ? 20 : 0,
   },
   actionContainer: {
     flexDirection: 'row',
@@ -216,7 +315,7 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: '#007AFF',
-    width: 80, // Sabit genişlik
+    width: 80,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
@@ -276,5 +375,38 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#dc3545',
     textAlign: 'center',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    width: 300,
+    padding: 20,
+    backgroundColor: 'white',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  modalButton: {
+    marginTop: 10,
+    backgroundColor: '#007AFF',
+    padding: 10,
+    borderRadius: 5,
+  },
+  aboutText: {
+    fontSize: 16,
+    marginVertical: 5,
+  },
+  linkText: {
+    textDecorationLine: 'underline',
+    color: '#007AFF',
+    marginBottom: 25,
   },
 });
