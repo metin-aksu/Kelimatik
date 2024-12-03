@@ -18,7 +18,7 @@ import {
 import {Picker} from '@react-native-picker/picker';
 import {databaseConnection, Word, SearchType} from '../db/database';
 import header_icon from '../assets/icon/header_icon.png';
-import question_icon from '../assets/icon/question_icon.png';
+import info_icon from '../assets/icon/info_icon.png';
 
 import {
   version as appVersion,
@@ -34,12 +34,13 @@ interface Section {
 
 export const HomeScreen: React.FC = () => {
   const [searchText, setSearchText] = useState<string>('');
-  const [searchType, setSearchType] = useState<SearchType>(SearchType.CONTAIN);
+  const [searchType, setSearchType] = useState<SearchType>(SearchType.EXACT);
   const [sections, setSections] = useState<Section[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [dbInitialized, setDbInitialized] = useState<boolean>(false);
   const [isError, setIsError] = useState<string>('');
   const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [totalWords, setTotalWords] = useState<number>(0);
 
   useEffect(() => {
     const initDB = async () => {
@@ -64,6 +65,10 @@ export const HomeScreen: React.FC = () => {
   );
 
   const groupWordsBySize = (words: Word[]): Section[] => {
+    if (!words || words.length === 0) {
+      return [];
+    }
+    setTotalWords(words.length);
     const groupedWords: {[key: number]: Word[]} = {};
 
     words.forEach(word => {
@@ -75,7 +80,7 @@ export const HomeScreen: React.FC = () => {
 
     return Object.entries(groupedWords)
       .map(([size, words2]) => ({
-        title: `${size} harfli kelimeler`,
+        title: `${size} harfli kelimeler (${words2.length})`,
         data: words2,
       }))
       .sort(
@@ -113,6 +118,7 @@ export const HomeScreen: React.FC = () => {
     setSearchText('');
     setSections([]);
     setIsError('');
+    setTotalWords(0);
   };
 
   const handleLinkPress = () => {
@@ -151,7 +157,7 @@ export const HomeScreen: React.FC = () => {
           <Text style={styles.titleText}>Kelimatik</Text>
         </View>
         <TouchableOpacity onPress={() => setModalVisible(true)}>
-          <Image source={question_icon} style={styles.questionIcon} />
+          <Image source={info_icon} style={styles.questionIcon} />
         </TouchableOpacity>
       </View>
       <View style={styles.container}>
@@ -176,9 +182,10 @@ export const HomeScreen: React.FC = () => {
               onValueChange={itemValue =>
                 setSearchType(itemValue as SearchType)
               }
+              mode="dropdown"
               style={styles.picker}>
               <Picker.Item
-                label="Sadece bu harflerden oluşanları"
+                label="Bu harflerden oluşan kelimeleri"
                 value={SearchType.EXACT}
               />
               <Picker.Item
@@ -199,7 +206,7 @@ export const HomeScreen: React.FC = () => {
             style={[styles.button, loading && styles.buttonDisabled]}
             onPress={handleSearch}
             disabled={loading || !dbInitialized}>
-            <Text style={styles.buttonText}>Bul</Text>
+            <Text style={styles.buttonText}>BUL</Text>
           </TouchableOpacity>
         </View>
         {loading ? (
@@ -214,7 +221,14 @@ export const HomeScreen: React.FC = () => {
               <View style={styles.errorContainer}>
                 <Text style={styles.errorText}>{isError}</Text>
               </View>
-            ) : (
+            ) : (<>
+              {totalWords > 0 && (
+                <View style={styles.totalWordsContainer}>
+                  <Text style={styles.totalWordsText}>
+                    Toplam {totalWords} kelime bulundu
+                  </Text>
+                </View>
+              )}
               <SectionList
                 sections={sections}
                 keyExtractor={item => item?.id?.toString()}
@@ -226,7 +240,7 @@ export const HomeScreen: React.FC = () => {
                 )}
                 style={styles.list}
               />
-            )}
+            </>)}
             {sections.length > 0 && (
               <TouchableOpacity
                 style={[styles.clearButton]}
@@ -243,7 +257,7 @@ export const HomeScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   headerContainer: {
-    marginBottom: 5,
+    marginBottom: 2,
     backgroundColor: '#D0D0D0',
     paddingHorizontal: 16,
     paddingVertical: 8,
@@ -296,10 +310,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   picker: {
-    // height: Platform.OS === 'ios' ? 150 : 48,
+    // height: Platform.OS === 'ios' ? 150 : 50,
     color: '#000',
-    fontSize: 14,
-    paddingTop: Platform.OS === 'ios' ? 20 : 0,
+    paddingTop: 0,
   },
   actionContainer: {
     flexDirection: 'row',
@@ -342,6 +355,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
   },
   wordText: {
+    fontSize: 16,
+  },
+  totalWordsContainer: {
+    marginBottom: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  totalWordsText: {
+    color: '#666',
     fontSize: 16,
   },
   sectionHeader: {
