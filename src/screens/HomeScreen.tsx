@@ -387,14 +387,17 @@ const styles = StyleSheet.create({
   },
   pickerContainer: {
     flex: 1,
+    height: 48,
     borderWidth: 1,
     borderColor: '#ccc',
     borderRadius: 8,
     backgroundColor: '#f8f8f8',
+    justifyContent: 'center',
   },
   button: {
     backgroundColor: '#007AFF',
     width: 80,
+    height: 48,
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
