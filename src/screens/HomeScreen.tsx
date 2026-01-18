@@ -373,7 +373,7 @@ const styles = StyleSheet.create({
     borderColor: '#ccc',
     borderRadius: 8,
     paddingHorizontal: 16,
-    fontSize: 16,
+    fontSize: 20,
   },
   picker: {
     // height: Platform.OS === 'ios' ? 150 : 50,
