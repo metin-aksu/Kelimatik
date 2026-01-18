@@ -42,6 +42,7 @@ export class DatabaseConnection {
     try {
       let query = 'SELECT * FROM kelimeler WHERE ';
       let searchPattern: string;
+      const processedLetters = letters.replace(/[*?]/g, '_');
 
       switch (searchType) {
         case SearchType.EXACT:
@@ -50,15 +51,15 @@ export class DatabaseConnection {
           break;
         case SearchType.START:
           query += 'kelime LIKE ?';
-          searchPattern = `${letters}%`;
+          searchPattern = `${processedLetters}%`;
           break;
         case SearchType.END:
           query += 'kelime LIKE ?';
-          searchPattern = `%${letters}`;
+          searchPattern = `%${processedLetters}`;
           break;
         case SearchType.CONTAIN:
           query += 'kelime LIKE ?';
-          searchPattern = `%${letters}%`;
+          searchPattern = `%${processedLetters}%`;
           break;
         default:
           throw new Error('Geçersiz arama tipi');
@@ -96,8 +97,14 @@ export class DatabaseConnection {
 }
 
 function createSqlForExact(inputLetters) {
-  const alphabet = 'abcçdefgğhıijklmnoöprsştuüvyz';
   const formattedLetters = inputLetters.toLowerCase().trim();
+  const hasWildcard = formattedLetters.includes('*') || formattedLetters.includes('?');
+
+  if (hasWildcard) {
+    return `SELECT * FROM kelimeler WHERE length(kelime) <= ${formattedLetters.length}`;
+  }
+
+  const alphabet = 'abcçdefgğhıijklmnoöprsştuüvyz';
   let sqlConditions = [];
 
   for (let i = 0; i < alphabet.length; i++) {
@@ -106,6 +113,11 @@ function createSqlForExact(inputLetters) {
       sqlConditions.push(`kelime NOT LIKE '%${currentLetter}%'`);
     }
   }
+
+  if (sqlConditions.length === 0) {
+    return 'SELECT * FROM kelimeler';
+  }
+
   const sql = `SELECT * FROM kelimeler WHERE ${sqlConditions.join(' AND ')}`;
   return sql;
 }
@@ -114,26 +126,28 @@ function canFormWord(word, availableLetters) {
   word = word.toLowerCase().trim();
   availableLetters = availableLetters.toLowerCase().trim();
 
-  let checkStatus = false;
+  let availableArray = availableLetters.split('');
 
   for (let i = 0; i < word.length; i++) {
-    checkStatus = false;
     const letterOfTheWord = word[i];
+    const index = availableArray.indexOf(letterOfTheWord);
 
-    for (let j = 0; j < availableLetters.length; j++) {
-      const availableLetter = availableLetters[j];
+    if (index !== -1) {
+      availableArray.splice(index, 1);
+    } else {
+      const wildIndex1 = availableArray.indexOf('*');
+      const wildIndex2 = availableArray.indexOf('?');
 
-      if (letterOfTheWord === availableLetter) {
-        checkStatus = true;
-        availableLetters = availableLetters.replace(availableLetter, '-');
-        break;
+      if (wildIndex1 !== -1) {
+        availableArray.splice(wildIndex1, 1);
+      } else if (wildIndex2 !== -1) {
+        availableArray.splice(wildIndex2, 1);
+      } else {
+        return false;
       }
     }
-    if (!checkStatus) {
-      break;
-    }
   }
-  return checkStatus;
+  return true;
 }
 
 export const databaseConnection = new DatabaseConnection();

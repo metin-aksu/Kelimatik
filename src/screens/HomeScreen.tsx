@@ -1,5 +1,5 @@
 // src/screens/HomeScreen.tsx
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -14,11 +14,14 @@ import {
   Linking,
   Modal,
   Button,
+  ScrollView,
+  Keyboard,
 } from 'react-native';
-import {Picker} from '@react-native-picker/picker';
-import {databaseConnection, Word, SearchType} from '../db/database';
+import { Picker } from '@react-native-picker/picker';
+import { databaseConnection, Word, SearchType } from '../db/database';
 import header_icon from '../assets/icon/header_icon.png';
 import info_icon from '../assets/icon/info_icon.png';
+import question_icon from '../assets/icon/question_icon.png';
 
 import {
   version as appVersion,
@@ -40,6 +43,7 @@ export const HomeScreen: React.FC = () => {
   const [dbInitialized, setDbInitialized] = useState<boolean>(false);
   const [isError, setIsError] = useState<string>('');
   const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const [helpModalVisible, setHelpModalVisible] = useState<boolean>(false);
   const [totalWords, setTotalWords] = useState<number>(0);
 
   useEffect(() => {
@@ -58,7 +62,7 @@ export const HomeScreen: React.FC = () => {
     initDB();
   }, []);
 
-  const renderWord = ({item}: {item: Word}) => (
+  const renderWord = ({ item }: { item: Word }) => (
     <View style={styles.wordItem}>
       <Text style={styles.wordText}>{item?.kelime}</Text>
     </View>
@@ -69,7 +73,7 @@ export const HomeScreen: React.FC = () => {
       return [];
     }
     setTotalWords(words.length);
-    const groupedWords: {[key: number]: Word[]} = {};
+    const groupedWords: { [key: number]: Word[] } = {};
 
     words.forEach(word => {
       if (!groupedWords[word.boyut]) {
@@ -91,6 +95,7 @@ export const HomeScreen: React.FC = () => {
   };
 
   const handleSearch = async () => {
+    Keyboard.dismiss();
     if (searchText.trim() === '') {
       setIsError('Henüz harf girmediniz');
       return;
@@ -146,7 +151,52 @@ export const HomeScreen: React.FC = () => {
                 {appWebsite}
               </Text>
             </TouchableOpacity>
-            <Button style={styles.modalButton} title="TAMAM" onPress={() => setModalVisible(false)} />
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => setModalVisible(false)}>
+              <Text style={styles.buttonText}>TAMAM</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={helpModalVisible}
+        onRequestClose={() => setHelpModalVisible(false)}>
+        <View style={styles.modalContainer}>
+          <View style={[styles.modalContent, { width: '90%' }]}>
+            <Text style={styles.modalTitle}>Nasıl Kullanılır?</Text>
+            <ScrollView style={{ maxHeight: 400 }}>
+              <Text style={styles.aboutText}>
+                1. Arama kutusuna elinizdeki harfleri veya aramak istediğiniz kelime parçasını girin.
+              </Text>
+              <Text style={styles.aboutText}>
+                2. Arama tipini seçin:
+              </Text>
+              <Text style={styles.bulletText}>• Bu harflerden oluşan: Girilen harflerle yazılabilecek kelimeleri bulur.</Text>
+              <Text style={styles.bulletText}>• Bu harflerle başlayan: Girilen harflerle başlayan kelimeleri bulur.</Text>
+              <Text style={styles.bulletText}>• Bu harflerle biten: Girilen harflerle biten kelimeleri bulur.</Text>
+              <Text style={styles.bulletText}>• İçeren: Girilen harf öbeğini herhangi bir yerinde barındıran kelimeleri bulur.</Text>
+
+              <Text style={[styles.aboutText, { fontWeight: 'bold', marginTop: 10 }]}>
+                Joker Karakterler (* veya ?)
+              </Text>
+              <Text style={styles.aboutText}>
+                Bilmediğiniz harfler yerine '*' veya '?' kullanabilirsiniz. Her joker karakter bir harf yerine geçer.
+              </Text>
+              <Text style={[styles.aboutText, { marginTop: 5 }]}>
+                Örnekler:
+              </Text>
+              <Text style={styles.bulletText}>• "k*t*p" → kitap, katip, kütüp...</Text>
+              <Text style={styles.bulletText}>• "a*ya" → arya, ayna...</Text>
+            </ScrollView>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => setHelpModalVisible(false)}>
+              <Text style={styles.buttonText}>ANLADIM</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -156,9 +206,18 @@ export const HomeScreen: React.FC = () => {
           <Image source={header_icon} style={styles.titleIcon} />
           <Text style={styles.titleText}>Kelimatik</Text>
         </View>
-        <TouchableOpacity onPress={() => setModalVisible(true)}>
-          <Image source={info_icon} style={styles.questionIcon} />
-        </TouchableOpacity>
+        <View style={styles.headerRightContainer}>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() => setHelpModalVisible(true)}>
+            <Image source={question_icon} style={styles.headerIcon} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.iconButton}
+            onPress={() => setModalVisible(true)}>
+            <Image source={info_icon} style={styles.headerIcon} />
+          </TouchableOpacity>
+        </View>
       </View>
       <View style={styles.container}>
         <View style={styles.searchContainer}>
@@ -233,7 +292,7 @@ export const HomeScreen: React.FC = () => {
                 sections={sections}
                 keyExtractor={item => item?.id?.toString()}
                 renderItem={renderWord}
-                renderSectionHeader={({section: {title}}) => (
+                renderSectionHeader={({ section: { title } }) => (
                   <View style={styles.sectionHeader}>
                     <Text style={styles.sectionHeaderText}>{title}</Text>
                   </View>
@@ -280,7 +339,14 @@ const styles = StyleSheet.create({
     height: 24,
     marginRight: 8,
   },
-  questionIcon: {
+  headerRightContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  iconButton: {
+    marginLeft: 12,
+  },
+  headerIcon: {
     width: 24,
     height: 24,
   },
@@ -316,7 +382,7 @@ const styles = StyleSheet.create({
   },
   actionContainer: {
     flexDirection: 'row',
-    marginBottom: 12,
+    marginBottom: 8,
     gap: 8,
   },
   pickerContainer: {
@@ -430,5 +496,11 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
     color: '#007AFF',
     marginBottom: 25,
+  },
+  bulletText: {
+    fontSize: 14,
+    marginVertical: 2,
+    marginLeft: 10,
+    color: '#333',
   },
 });
