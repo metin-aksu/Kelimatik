@@ -1,8 +1,13 @@
 import React from 'react';
-import {HomeScreen} from './src/screens/HomeScreen';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { HomeScreen } from './src/screens/HomeScreen';
 
 const App = () => {
-  return <HomeScreen />;
+  return (
+    <SafeAreaProvider>
+      <HomeScreen />
+    </SafeAreaProvider>
+  );
 };
 
 export default App;

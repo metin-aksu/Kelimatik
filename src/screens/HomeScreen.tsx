@@ -16,7 +16,9 @@ import {
   Button,
   ScrollView,
   Keyboard,
+  StatusBar,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Picker } from '@react-native-picker/picker';
 import { databaseConnection, Word, SearchType } from '../db/database';
 import header_icon from '../assets/icon/header_icon.png';
@@ -133,7 +135,7 @@ export const HomeScreen: React.FC = () => {
   };
 
   return (
-    <>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom']}>
       <Modal
         animationType="slide"
         transparent={true}
@@ -310,11 +312,15 @@ export const HomeScreen: React.FC = () => {
           </>
         )}
       </View>
-    </>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#D0D0D0',
+  },
   headerContainer: {
     marginBottom: 2,
     backgroundColor: '#D0D0D0',
@@ -483,10 +489,10 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: 5,
   },
   modalButton: {
-    marginTop: 10,
+    marginTop: 5,
     backgroundColor: '#007AFF',
     padding: 10,
     borderRadius: 5,
