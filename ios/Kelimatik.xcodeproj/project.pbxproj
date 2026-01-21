@@ -493,6 +493,8 @@
 				DEVELOPMENT_TEAM = Y5K2497B6G;
 				ENABLE_BITCODE = NO;
 				INFOPLIST_FILE = Kelimatik/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Kelimatik;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -521,6 +523,8 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = Y5K2497B6G;
 				INFOPLIST_FILE = Kelimatik/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = Kelimatik;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				IPHONEOS_DEPLOYMENT_TARGET = 15.1;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
