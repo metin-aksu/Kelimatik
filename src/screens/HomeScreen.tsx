@@ -24,6 +24,7 @@ import { databaseConnection, Word, SearchType } from '../db/database';
 import header_icon from '../assets/icon/header_icon.png';
 import info_icon from '../assets/icon/info_icon.png';
 import question_icon from '../assets/icon/question_icon.png';
+import arrow_down from '../assets/icon/arrow_down.png';
 
 import {
   version as appVersion,
@@ -298,40 +299,14 @@ export const HomeScreen: React.FC = () => {
         </View>
         <View style={styles.actionContainer}>
           <View style={styles.pickerContainer}>
-            {Platform.OS === 'ios' ? (
-              <TouchableOpacity
-                style={styles.iosPickerButton}
-                onPress={() => setPickerModalVisible(true)}>
-                <Text style={styles.iosPickerText} numberOfLines={1}>
-                  {getSearchTypeLabel(searchType)}
-                </Text>
-              </TouchableOpacity>
-            ) : (
-              <Picker
-                selectedValue={searchType}
-                onValueChange={itemValue =>
-                  setSearchType(itemValue as SearchType)
-                }
-                mode="dropdown"
-                style={styles.picker}>
-                <Picker.Item
-                  label="Bu harflerden oluşan kelimeleri"
-                  value={SearchType.EXACT}
-                />
-                <Picker.Item
-                  label="Bu harflerle başlayan kelimeleri"
-                  value={SearchType.START}
-                />
-                <Picker.Item
-                  label="Bu harflerle biten kelimeleri"
-                  value={SearchType.END}
-                />
-                <Picker.Item
-                  label="Bu harf öbeğini içeren kelimeleri"
-                  value={SearchType.CONTAIN}
-                />
-              </Picker>
-            )}
+            <TouchableOpacity
+              style={styles.iosPickerButton}
+              onPress={() => setPickerModalVisible(true)}>
+              <Text style={styles.iosPickerText} numberOfLines={1}>
+                {getSearchTypeLabel(searchType)}
+              </Text>
+              <Image source={arrow_down} style={styles.arrowIcon} />
+            </TouchableOpacity>
           </View>
           <TouchableOpacity
             style={[styles.button, loading && styles.buttonDisabled]}
@@ -455,12 +430,23 @@ const styles = StyleSheet.create({
   },
   iosPickerButton: {
     flex: 1,
-    justifyContent: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 8,
   },
   iosPickerText: {
     fontSize: 14,
     color: '#000',
+    flex: 1,
+  },
+  arrowIcon: {
+    width: 16,
+    height: 16,
+    marginLeft: 8,
+    tintColor: '#666',
+    resizeMode: 'contain',
+    transform: [{ rotate: '-90deg' }],
   },
   modalOverlay: {
     flex: 1,
@@ -484,7 +470,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#f8f9fa',
   },
   pickerOptionText: {
-    fontSize: 12,
+    fontSize: 18,
     color: '#333',
   },
   pickerOptionTextSelected: {
@@ -499,7 +485,7 @@ const styles = StyleSheet.create({
   },
   pickerCancelText: {
     color: '#dc3545',
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: 'bold',
   },
   picker: {
