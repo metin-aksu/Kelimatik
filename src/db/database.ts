@@ -1,4 +1,5 @@
 import SQLite from 'react-native-sqlite-storage';
+import { Platform } from 'react-native';
 
 SQLite.enablePromise(true);
 
@@ -23,7 +24,7 @@ export class DatabaseConnection {
       const db = await SQLite.openDatabase({
         name: 'Kelimeler.db',
         location: 'default',
-        createFromLocation: 1,
+        createFromLocation: Platform.OS === 'ios' ? '~Kelimeler.db' : 1,
       });
 
       this.database = db;

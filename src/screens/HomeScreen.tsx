@@ -46,6 +46,7 @@ export const HomeScreen: React.FC = () => {
   const [isError, setIsError] = useState<string>('');
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [helpModalVisible, setHelpModalVisible] = useState<boolean>(false);
+  const [pickerModalVisible, setPickerModalVisible] = useState<boolean>(false);
   const [totalWords, setTotalWords] = useState<number>(0);
 
   useEffect(() => {
@@ -63,6 +64,21 @@ export const HomeScreen: React.FC = () => {
 
     initDB();
   }, []);
+
+  const getSearchTypeLabel = (type: SearchType) => {
+    switch (type) {
+      case SearchType.EXACT:
+        return 'Bu harflerden oluşan kelimeleri';
+      case SearchType.START:
+        return 'Bu harflerle başlayan kelimeleri';
+      case SearchType.END:
+        return 'Bu harflerle biten kelimeleri';
+      case SearchType.CONTAIN:
+        return 'Bu harf öbeğini içeren kelimeleri';
+      default:
+        return '';
+    }
+  };
 
   const renderWord = ({ item }: { item: Word }) => (
     <View style={styles.wordItem}>
@@ -203,6 +219,50 @@ export const HomeScreen: React.FC = () => {
         </View>
       </Modal>
 
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={pickerModalVisible}
+        onRequestClose={() => setPickerModalVisible(false)}>
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setPickerModalVisible(false)}
+        >
+          <View style={styles.pickerModalContent}>
+            {[
+              { label: 'Bu harflerden oluşan kelimeleri', value: SearchType.EXACT },
+              { label: 'Bu harflerle başlayan kelimeleri', value: SearchType.START },
+              { label: 'Bu harflerle biten kelimeleri', value: SearchType.END },
+              { label: 'Bu harf öbeğini içeren kelimeleri', value: SearchType.CONTAIN },
+            ].map((option) => (
+              <TouchableOpacity
+                key={option.value}
+                style={[
+                  styles.pickerOption,
+                  searchType === option.value && styles.pickerOptionSelected
+                ]}
+                onPress={() => {
+                  setSearchType(option.value);
+                  setPickerModalVisible(false);
+                }}>
+                <Text style={[
+                  styles.pickerOptionText,
+                  searchType === option.value && styles.pickerOptionTextSelected
+                ]}>
+                  {option.label}
+                </Text>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity
+              style={styles.pickerCancelButton}
+              onPress={() => setPickerModalVisible(false)}>
+              <Text style={styles.pickerCancelText}>İptal</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
       <View style={styles.headerContainer}>
         <View style={styles.titleContainer}>
           <Image source={header_icon} style={styles.titleIcon} />
@@ -238,30 +298,40 @@ export const HomeScreen: React.FC = () => {
         </View>
         <View style={styles.actionContainer}>
           <View style={styles.pickerContainer}>
-            <Picker
-              selectedValue={searchType}
-              onValueChange={itemValue =>
-                setSearchType(itemValue as SearchType)
-              }
-              mode="dropdown"
-              style={styles.picker}>
-              <Picker.Item
-                label="Bu harflerden oluşan kelimeleri"
-                value={SearchType.EXACT}
-              />
-              <Picker.Item
-                label="Bu harflerle başlayan kelimeleri"
-                value={SearchType.START}
-              />
-              <Picker.Item
-                label="Bu harflerle biten kelimeleri"
-                value={SearchType.END}
-              />
-              <Picker.Item
-                label="Bu harf öbeğini içeren kelimeleri"
-                value={SearchType.CONTAIN}
-              />
-            </Picker>
+            {Platform.OS === 'ios' ? (
+              <TouchableOpacity
+                style={styles.iosPickerButton}
+                onPress={() => setPickerModalVisible(true)}>
+                <Text style={styles.iosPickerText} numberOfLines={1}>
+                  {getSearchTypeLabel(searchType)}
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <Picker
+                selectedValue={searchType}
+                onValueChange={itemValue =>
+                  setSearchType(itemValue as SearchType)
+                }
+                mode="dropdown"
+                style={styles.picker}>
+                <Picker.Item
+                  label="Bu harflerden oluşan kelimeleri"
+                  value={SearchType.EXACT}
+                />
+                <Picker.Item
+                  label="Bu harflerle başlayan kelimeleri"
+                  value={SearchType.START}
+                />
+                <Picker.Item
+                  label="Bu harflerle biten kelimeleri"
+                  value={SearchType.END}
+                />
+                <Picker.Item
+                  label="Bu harf öbeğini içeren kelimeleri"
+                  value={SearchType.CONTAIN}
+                />
+              </Picker>
+            )}
           </View>
           <TouchableOpacity
             style={[styles.button, loading && styles.buttonDisabled]}
@@ -312,7 +382,7 @@ export const HomeScreen: React.FC = () => {
           </>
         )}
       </View>
-    </SafeAreaView>
+    </SafeAreaView >
   );
 };
 
@@ -380,6 +450,57 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 16,
     fontSize: 20,
+    backgroundColor: '#fff',
+    color: '#000',
+  },
+  iosPickerButton: {
+    flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: 8,
+  },
+  iosPickerText: {
+    fontSize: 14,
+    color: '#000',
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  pickerModalContent: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    paddingBottom: 40, // Home indicator için ekstra boşluk
+    paddingTop: 8,
+  },
+  pickerOption: {
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
+  },
+  pickerOptionSelected: {
+    backgroundColor: '#f8f9fa',
+  },
+  pickerOptionText: {
+    fontSize: 12,
+    color: '#333',
+  },
+  pickerOptionTextSelected: {
+    color: '#007AFF',
+    fontWeight: '600',
+  },
+  pickerCancelButton: {
+    marginTop: 8,
+    paddingVertical: 16,
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  pickerCancelText: {
+    color: '#dc3545',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   picker: {
     // height: Platform.OS === 'ios' ? 150 : 50,
@@ -459,7 +580,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 16,
-    marginBottom: Platform.OS === 'ios' ? 20 : 16, // iOS'ta bottom padding ekledik
+    // marginBottom: Platform.OS === 'ios' ? 20 : 16, // iOS'ta bottom padding ekledik
   },
   errorContainer: {
     flex: 1,
